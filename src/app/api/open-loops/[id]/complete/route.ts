@@ -1,10 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-type Params = {
-  params: { id: string };
-};
-
-export async function POST(_req: Request, { params }: Params) {
+export async function POST(
+  _req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const baseUrl = process.env.INTEL_BASE_URL;
   const apiKey = process.env.INTEL_API_KEY;
 
@@ -16,7 +15,8 @@ export async function POST(_req: Request, { params }: Params) {
   }
 
   try {
-    const res = await fetch(`${baseUrl}/open-loops/${params.id}/complete`, {
+    const { id } = await context.params;
+    const res = await fetch(`${baseUrl}/open-loops/${id}/complete`, {
       method: "POST",
       headers: {
         ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
