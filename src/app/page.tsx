@@ -1,65 +1,95 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import { DashboardSection } from "@/components/DashboardSection";
+import { OnboardingSection } from "@/components/OnboardingSection";
+
+type StatusResponse = {
+  status?: string;
+};
 
 export default function Home() {
+  const [connected, setConnected] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const res = await fetch("/api/whatsapp/status", { cache: "no-store" });
+        if (!res.ok) return;
+        const data: StatusResponse = await res.json();
+        if (data.status === "connected") {
+          setConnected(true);
+        }
+      } catch (error) {
+        console.error("Initial status check failed", error);
+      } finally {
+        setChecking(false);
+      }
+    };
+
+    checkStatus();
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="space-y-8">
+      <header className="flex items-center justify-between">
+        <div>
+          <p className="text-sm uppercase tracking-[0.25em] text-blue-200/60">
+            Pedrito · WhatsApp companion
+          </p>
+          <h1 className="text-3xl font-semibold text-white">A calm daily check-in</h1>
+          <p className="text-sm text-slate-200/80">
+            Pedrito spots open loops in your chats and turns them into a gentle checklist.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="hidden text-sm text-slate-200/70 sm:block">
+          {connected ? "Linked to WhatsApp" : checking ? "Checking connection..." : "Not linked yet"}
         </div>
-      </main>
+      </header>
+
+      <div className="grid gap-6 lg:grid-cols-[1.05fr_1.3fr]">
+        <OnboardingSection onConnected={() => setConnected(true)} />
+        {connected ? (
+          <DashboardSection />
+        ) : (
+          <section className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900/60 via-slate-900/70 to-slate-950/70 p-7 shadow-2xl ring-1 ring-white/5">
+            <div className="space-y-2">
+              <p className="text-sm uppercase tracking-[0.2em] text-blue-200/60">
+                What Pedrito will do
+              </p>
+              <h2 className="text-2xl font-semibold text-white">
+                A tiny assistant for your promises and follow-ups
+              </h2>
+              <p className="text-sm text-slate-200/80">
+                Once you link WhatsApp, Pedrito will look for promises, follow-ups and
+                unanswered questions so nothing slips through.
+              </p>
+            </div>
+            <ul className="mt-4 space-y-3 text-sm text-slate-100/80">
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5 text-base">✨</span>
+                <span>Spot promises, follow-ups and unanswered questions.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5 text-base">🧘‍♂️</span>
+                <span>Turn them into a short list of things people might be waiting on.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5 text-base">⏳</span>
+                <span>Roll anything still open into tomorrow, so nothing important slips.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5 text-base">🌱</span>
+                <span>
+                  He’s still small and learning. Marking things as Done or Not important teaches
+                  him what matters to you.
+                </span>
+              </li>
+            </ul>
+          </section>
+        )}
+      </div>
     </div>
   );
 }

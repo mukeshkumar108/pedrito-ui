@@ -1,0 +1,129 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
+export type OpenLoopCategory =
+  | "promise"
+  | "follow_up"
+  | "question"
+  | "time_sensitive"
+  | string
+  | undefined;
+
+export type OpenLoopStatus = "open" | "done" | "dismissed" | string | undefined;
+
+export interface OpenLoop {
+  id: string;
+  who?: string;
+  what?: string;
+  when?: string | null;
+  category?: OpenLoopCategory;
+  status?: OpenLoopStatus;
+  createdAt?: string;
+}
+
+interface OpenLoopsListProps {
+  loops: OpenLoop[];
+  onChange?: () => void;
+}
+
+const categoryLabel: Record<string, string> = {
+  promise: "Promise",
+  follow_up: "Follow-up",
+  question: "Question",
+  time_sensitive: "Time-sensitive",
+};
+
+function formatDate(dateString?: string) {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+export function OpenLoopsList({ loops, onChange }: OpenLoopsListProps) {
+  const [submittingId, setSubmittingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const orderedLoops = useMemo(() => {
+    if (!loops?.length) return [];
+    return [...loops].sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
+  }, [loops]);
+
+  const handleAction = async (id: string, action: "complete" | "dismiss") => {
+    try {
+      setSubmittingId(id);
+      setError(null);
+      const res = await fetch(`/api/open-loops/${id}/${action}`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Unable to update item");
+      }
+      onChange?.();
+    } catch (err) {
+      console.error("Loop update failed", err);
+      setError("Couldn’t update this item right now. Please try again.");
+    } finally {
+      setSubmittingId(null);
+    }
+  };
+
+  if (!orderedLoops?.length) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-100/80">
+        Nothing urgent on your plate right now. If someone asks for something,
+        Pedrito will add it here for tomorrow’s check-in.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {orderedLoops.map((loop) => {
+        const meta: string[] = [];
+        if (loop.who) meta.push(loop.who);
+        if (loop.category) meta.push(categoryLabel[loop.category] ?? "Open loop");
+        const dateLabel = formatDate(loop.createdAt);
+        if (dateLabel) meta.push(dateLabel);
+        if (loop.when) meta.push(`when: ${loop.when}`);
+
+        return (
+          <div
+            key={loop.id}
+            className="rounded-2xl border border-white/10 bg-slate-900/60 p-4 shadow-lg ring-1 ring-white/5"
+          >
+            <p className="text-base font-medium text-white">
+              {loop.what || "Something to follow up on"}
+            </p>
+            {meta.length > 0 && (
+              <p className="mt-1 text-xs text-slate-200/70">{meta.join(" • ")}</p>
+            )}
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-100 ring-1 ring-emerald-400/30 transition hover:bg-emerald-500/25"
+                onClick={() => handleAction(loop.id, "complete")}
+                disabled={submittingId === loop.id}
+              >
+                ✅ Done
+              </button>
+              <button
+                className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-slate-100 ring-1 ring-white/15 transition hover:bg-white/15"
+                onClick={() => handleAction(loop.id, "dismiss")}
+                disabled={submittingId === loop.id}
+              >
+                ✕ Not important
+              </button>
+            </div>
+          </div>
+        );
+      })}
+      {error && <p className="text-xs text-amber-100/80">{error}</p>}
+    </div>
+  );
+}
