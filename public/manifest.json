@@ -1,0 +1,16 @@
+{
+  "name": "Pedrito",
+  "short_name": "Pedrito",
+  "display": "standalone",
+  "start_url": "/",
+  "background_color": "#f8f5f0",
+  "theme_color": "#f8f5f0",
+  "icons": [
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -13,9 +13,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pedrito | Calm WhatsApp check-in",
-  description:
-    "Pedrito is a tiny assistant that turns your WhatsApp chaos into a calm daily checklist.",
+  title: "Pedrito",
+  description: "Your tiny second brain for messages and open loops.",
+  manifest: "/manifest.json",
+  themeColor: "#f8f5f0",
 };
 
 export default function RootLayout({
@@ -26,20 +27,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-slate-950 text-slate-50`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-[#f8f5f0] text-slate-900`}
       >
-        <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#f8f5f0] via-[#f4efe6] to-[#f1ebdf]">
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.12),transparent_30%),radial-gradient(circle_at_80%_0%,rgba(16,185,129,0.12),transparent_25%)]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(244,187,146,0.35),transparent_35%),radial-gradient(circle_at_80%_10%,rgba(154,192,205,0.35),transparent_30%)] blur-3xl"
           />
-          <main className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10 sm:px-8">
-            <div className="w-full max-w-6xl rounded-[28px] border border-white/10 bg-white/5 p-1 shadow-2xl backdrop-blur-xl">
-              <div className="rounded-[24px] bg-gradient-to-br from-slate-950/90 via-slate-900/90 to-black/80 p-6 sm:p-8">
-                {children}
-              </div>
-            </div>
-          </main>
+          <main className="relative z-10 min-h-screen">{children}</main>
         </div>
       </body>
     </html>

@@ -6,20 +6,48 @@ type WhatsappStatus = "connected" | "waiting_qr" | "unknown";
 
 type StatusResponse = {
   status?: string;
-};
-
-type QRResponse = {
-  qr?: string;
+  state?: string;
+  connectionState?: string;
+  connection_state?: string;
+  connected?: boolean;
+  isAuthenticated?: boolean;
+  authenticated?: boolean;
+  ready?: boolean;
+  [key: string]: unknown;
 };
 
 interface OnboardingSectionProps {
   onConnected?: () => void;
 }
 
+const interpretWhatsappStatus = (data: StatusResponse | null): WhatsappStatus => {
+  if (!data || typeof data !== "object") return "unknown";
+  if (data.connected === true || data.isAuthenticated === true || data.authenticated === true || data.ready === true) {
+    return "connected";
+  }
+  const raw =
+    (typeof data.status === "string" && data.status) ||
+    (typeof data.state === "string" && data.state) ||
+    (typeof data.connectionState === "string" && data.connectionState) ||
+    (typeof data.connection_state === "string" && data.connection_state) ||
+    (typeof data.status === "object" &&
+      data.status &&
+      typeof (data.status as { state?: string }).state === "string" &&
+      (data.status as { state?: string }).state) ||
+    "";
+  const normalized = raw.toLowerCase();
+  if (normalized.includes("connected")) return "connected";
+  if (normalized.includes("qr") || normalized.includes("pair") || normalized.includes("waiting")) {
+    return "waiting_qr";
+  }
+  return "unknown";
+};
+
 export function OnboardingSection({ onConnected }: OnboardingSectionProps) {
   const [status, setStatus] = useState<WhatsappStatus>("unknown");
-  const [qr, setQr] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [rawStatus, setRawStatus] = useState<StatusResponse | null>(null);
+  const [qrVersion, setQrVersion] = useState(0);
   const hasAnnouncedConnected = useRef(false);
 
   const updateStatus = useCallback(async () => {
@@ -29,12 +57,8 @@ export function OnboardingSection({ onConnected }: OnboardingSectionProps) {
         throw new Error(await res.text());
       }
       const data: StatusResponse = await res.json();
-      const nextStatus =
-        data.status === "connected"
-          ? "connected"
-          : data.status === "waiting_qr"
-          ? "waiting_qr"
-          : "unknown";
+      setRawStatus(data);
+      const nextStatus = interpretWhatsappStatus(data);
       setStatus(nextStatus);
       if (nextStatus === "connected") {
         setMessage(null);
@@ -48,22 +72,6 @@ export function OnboardingSection({ onConnected }: OnboardingSectionProps) {
     }
   }, []);
 
-  const fetchQr = useCallback(async () => {
-    try {
-      const res = await fetch("/api/whatsapp/qr", { cache: "no-store" });
-      if (!res.ok) {
-        throw new Error(await res.text());
-      }
-      const data: QRResponse = await res.json();
-      setQr(data.qr ?? null);
-    } catch (error) {
-      console.error("QR fetch failed", error);
-      setMessage(
-        "I’m having trouble pulling the QR right now. Give it a moment and we’ll try again."
-      );
-    }
-  }, []);
-
   useEffect(() => {
     updateStatus();
     const interval = setInterval(updateStatus, 5000);
@@ -72,12 +80,11 @@ export function OnboardingSection({ onConnected }: OnboardingSectionProps) {
 
   useEffect(() => {
     if (status === "waiting_qr") {
-      fetchQr();
-      const interval = setInterval(fetchQr, 15000);
+      setQrVersion((v) => v + 1);
+      const interval = setInterval(() => setQrVersion((v) => v + 1), 15000);
       return () => clearInterval(interval);
     }
-    setQr(null);
-  }, [status, fetchQr]);
+  }, [status]);
 
   useEffect(() => {
     if (status === "connected" && !hasAnnouncedConnected.current) {
@@ -140,17 +147,11 @@ export function OnboardingSection({ onConnected }: OnboardingSectionProps) {
             so if it looks old, just wait a few seconds.
           </p>
           <div className="mt-4 flex items-center justify-center rounded-xl bg-black/60 p-4 ring-1 ring-white/10">
-            {qr ? (
-              <img
-                src={`data:image/png;base64,${qr}`}
-                alt="WhatsApp QR"
-                className="h-40 w-40 rounded-lg bg-white p-2 shadow-lg"
-              />
-            ) : (
-              <div className="flex h-40 w-40 items-center justify-center rounded-lg border border-dashed border-white/20 text-xs text-slate-300/70">
-                Fetching the latest code...
-              </div>
-            )}
+            <img
+              src={`/api/whatsapp/qr?v=${qrVersion}`}
+              alt="WhatsApp QR"
+              className="h-64 w-64 rounded-lg bg-white p-2 shadow-lg"
+            />
           </div>
         </div>
       )}
@@ -169,6 +170,15 @@ export function OnboardingSection({ onConnected }: OnboardingSectionProps) {
         <p className="mt-4 text-xs text-slate-200/70" role="status">
           {message}
         </p>
+      )}
+
+      {rawStatus && (
+        <details className="mt-4 text-xs text-slate-300/80">
+          <summary className="cursor-pointer text-slate-200">Debug: status payload</summary>
+          <pre className="mt-2 whitespace-pre-wrap break-all rounded-xl bg-white/10 p-3 text-[11px] text-slate-100">
+            {JSON.stringify(rawStatus, null, 2)}
+          </pre>
+        </details>
       )}
     </section>
   );

@@ -14,7 +14,7 @@ export async function GET() {
   const base = rawBase.replace(/\/+$/, "");
 
   try {
-    const res = await fetch(`${base}/status`, {
+    const res = await fetch(`${base}/qr`, {
       headers: apiKey
         ? {
             Authorization: `Bearer ${apiKey}`,
@@ -25,20 +25,20 @@ export async function GET() {
 
     if (!res.ok) {
       const text = await res.text();
-      console.error("[whatsapp/status] Backend error", res.status, text);
+      console.error("[whatsapp/qr-raw] Backend error", res.status, text);
       return NextResponse.json(
-        { error: `Failed to fetch WhatsApp status: ${text || res.status}` },
+        { error: `Failed to fetch WhatsApp QR: ${text || res.status}` },
         { status: res.status }
       );
     }
 
-    const data = await res.json();
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[whatsapp/status] Backend data", data);
-    }
-    return NextResponse.json(data);
+    const bodyText = await res.text();
+    return NextResponse.json({
+      raw: bodyText,
+      length: bodyText.length,
+    });
   } catch (error) {
-    console.error("[whatsapp/status] Error fetching WhatsApp status", error);
+    console.error("[whatsapp/qr-raw] Error fetching WhatsApp QR", error);
     return NextResponse.json(
       { error: "Unable to reach WhatsApp right now." },
       { status: 500 }

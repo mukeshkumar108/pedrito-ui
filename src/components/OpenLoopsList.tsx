@@ -41,6 +41,25 @@ function formatDate(dateString?: string) {
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+function timeAgo(dateInput?: string) {
+  if (!dateInput) return null;
+  const date = new Date(dateInput);
+  if (Number.isNaN(date.getTime())) return null;
+  const now = Date.now();
+  const diffMs = now - date.getTime();
+  const diffSec = Math.max(0, Math.floor(diffMs / 1000));
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return `${diffMin} min ago`;
+  if (diffHour < 24) return `${diffHour} h ago`;
+  if (diffDay === 1) return "yesterday";
+  if (diffDay < 7) return `${diffDay} days ago`;
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 export function OpenLoopsList({ loops, onChange }: OpenLoopsListProps) {
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -76,9 +95,9 @@ export function OpenLoopsList({ loops, onChange }: OpenLoopsListProps) {
 
   if (!orderedLoops?.length) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-100/80">
-        Nothing urgent on your plate right now. If someone asks for something,
-        Pedrito will add it here for tomorrow’s check-in.
+      <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 text-sm text-slate-700 shadow-inner">
+        You don’t owe anyone anything right now. If someone asks for something, it will appear here
+        for tomorrow’s check-in.
       </div>
     );
   }
@@ -96,24 +115,23 @@ export function OpenLoopsList({ loops, onChange }: OpenLoopsListProps) {
         return (
           <div
             key={loop.id}
-            className="rounded-2xl border border-white/10 bg-slate-900/60 p-4 shadow-lg ring-1 ring-white/5"
+            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md"
           >
-            <p className="text-base font-medium text-white">
-              {loop.what || "Something to follow up on"}
-            </p>
-            {meta.length > 0 && (
-              <p className="mt-1 text-xs text-slate-200/70">{meta.join(" • ")}</p>
-            )}
+            <p className="text-base font-medium text-slate-900">{loop.what || "Something to follow up on"}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400/70">
+              {timeAgo(loop.createdAt) && <span>{timeAgo(loop.createdAt)}</span>}
+              {meta.length > 0 && <span className="text-slate-500">{meta.join(" • ")}</span>}
+            </div>
             <div className="mt-3 flex flex-wrap gap-2">
               <button
-                className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-100 ring-1 ring-emerald-400/30 transition hover:bg-emerald-500/25"
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200 transition hover:bg-emerald-200"
                 onClick={() => handleAction(loop.id, "complete")}
                 disabled={submittingId === loop.id}
               >
                 ✅ Done
               </button>
               <button
-                className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-slate-100 ring-1 ring-white/15 transition hover:bg-white/15"
+                className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-800 ring-1 ring-slate-200 transition hover:bg-slate-200"
                 onClick={() => handleAction(loop.id, "dismiss")}
                 disabled={submittingId === loop.id}
               >
@@ -123,7 +141,7 @@ export function OpenLoopsList({ loops, onChange }: OpenLoopsListProps) {
           </div>
         );
       })}
-      {error && <p className="text-xs text-amber-100/80">{error}</p>}
+      {error && <p className="text-xs text-rose-500">{error}</p>}
     </div>
   );
 }
