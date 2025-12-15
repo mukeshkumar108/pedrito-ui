@@ -7,62 +7,60 @@ export async function GET() {
   const apiKey = process.env.WHATSAPP_API_KEY;
 
   if (!rawBase) {
-    return NextResponse.json(
-      { error: "WhatsApp connection details are not configured." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "WHATSAPP_BASE_URL is not configured" }, { status: 500 });
   }
 
   const base = rawBase.replace(/\/+$/, "");
+  const upstreamUrl = `${base}/qr`;
 
   try {
-    const res = await fetch(`${base}/qr`, {
-      headers: apiKey
-        ? {
-            Authorization: `Bearer ${apiKey}`,
-          }
-        : undefined,
+    const res = await fetch(upstreamUrl, {
+      headers: {
+        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+      },
       cache: "no-store",
     });
 
     if (!res.ok) {
-      const text = await res.text();
+      const text = await res.text().catch(() => "");
       console.error("[whatsapp/qr] Backend error", res.status, text);
       return NextResponse.json(
-        { error: "Failed to fetch WhatsApp QR", details: text || res.status },
+        { error: "Failed to fetch WhatsApp QR", details: text },
         { status: res.status }
       );
     }
 
-    const contentType = res.headers.get("content-type") || "";
+    const json = await res.json();
 
-    if (contentType.includes("image/png")) {
-      const arrayBuffer = await res.arrayBuffer();
-      return new Response(arrayBuffer, {
+    const rawQr = json?.qr;
+    if (!rawQr || typeof rawQr !== "string") {
+      console.error("[whatsapp/qr] No valid 'qr' field in upstream json");
+      return NextResponse.json(
+        { error: "Upstream QR JSON has no valid 'qr' field" },
+        { status: 500 }
+      );
+    }
+
+    const trimmed = rawQr.trim();
+    const base64Part = trimmed.replace(/^data:[^,]+,/, "");
+
+    try {
+      const buffer = Buffer.from(base64Part, "base64");
+      return new Response(buffer, {
         status: 200,
         headers: {
           "Content-Type": "image/png",
           "Cache-Control": "no-store",
         },
       });
+    } catch (e) {
+      console.error("[whatsapp/qr] Failed to decode base64", e);
+      return NextResponse.json({ error: "Failed to decode QR base64" }, { status: 500 });
     }
-
-    const bodyText = await res.text();
-    const trimmed = bodyText.trim();
-    const base64Part = trimmed.replace(/^data:[^,]+,/, "");
-    const buffer = Buffer.from(base64Part, "base64");
-
-    return new Response(buffer, {
-      status: 200,
-      headers: {
-        "Content-Type": "image/png",
-        "Cache-Control": "no-store",
-      },
-    });
-  } catch (error) {
-    console.error("[whatsapp/qr] Proxy error", error);
+  } catch (err: any) {
+    console.error("[whatsapp/qr] Proxy error", err);
     return NextResponse.json(
-      { error: "Unable to reach WhatsApp right now." },
+      { error: "Failed to contact WhatsApp backend", details: err?.message },
       { status: 500 }
     );
   }

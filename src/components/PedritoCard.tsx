@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { OpenLoop, OpenLoopsList } from "./OpenLoopsList";
+import styles from "./PedritoCard.module.css";
 
 type PedritoState = "onboarding" | "connect_whatsapp" | "connecting" | "digest" | "disconnected";
 
@@ -17,16 +18,6 @@ type StatusResponse = {
   authenticated?: boolean;
   ready?: boolean;
   [key: string]: unknown;
-};
-
-type DigestSummary = {
-  narrativeSummary?: string;
-  keyPeople?: string[];
-  keyTopics?: string[];
-};
-
-type DigestResponse = {
-  summary?: DigestSummary;
 };
 
 const interpretWhatsappStatus = (data: StatusResponse | null): WhatsappStatus => {
@@ -69,11 +60,12 @@ export function PedritoCard() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [qrVersion, setQrVersion] = useState(0);
   const [loops, setLoops] = useState<OpenLoop[]>([]);
-  const [digest, setDigest] = useState<DigestSummary | null>(null);
+  const [hiddenLoopIds, setHiddenLoopIds] = useState<Set<string>>(new Set());
+  const hiddenLoopIdsRef = useRef<Set<string>>(new Set());
   const [loadingData, setLoadingData] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
   const [refreshingStatus, setRefreshingStatus] = useState(false);
-  const hasLoadedDigest = useRef(false);
+  const hasLoadedLoops = useRef(false);
   const todayLabel = useMemo(() => {
     const now = new Date();
     return new Intl.DateTimeFormat("en-US", {
@@ -87,6 +79,22 @@ export function PedritoCard() {
     const stored = localStorage.getItem("pedrito-onboarded") === "true";
     setHasOnboarded(stored);
     setView(stored ? "connect_whatsapp" : "onboarding");
+  }, []);
+
+  useEffect(() => {
+    const storedHidden = localStorage.getItem("pedrito-hidden-loops");
+    if (storedHidden) {
+      try {
+        const parsed = JSON.parse(storedHidden);
+        if (Array.isArray(parsed)) {
+          const next = new Set<string>(parsed);
+          hiddenLoopIdsRef.current = next;
+          setHiddenLoopIds(next);
+        }
+      } catch (error) {
+        console.error("Failed to parse hidden loops", error);
+      }
+    }
   }, []);
 
   const updateStatus = useCallback(
@@ -119,15 +127,6 @@ export function PedritoCard() {
     [hasOnboarded]
   );
 
-  const fetchDigest = useCallback(async () => {
-    const res = await fetch("/api/digest/today", { cache: "no-store" });
-    if (!res.ok) {
-      throw new Error(await res.text());
-    }
-    const data: DigestResponse = await res.json();
-    setDigest(data.summary ?? null);
-  }, []);
-
   const fetchLoops = useCallback(async () => {
     const res = await fetch("/api/open-loops/active", { cache: "no-store" });
     if (!res.ok) {
@@ -137,22 +136,22 @@ export function PedritoCard() {
     const loopsList: OpenLoop[] = Array.isArray(data)
       ? data
       : data.loops || data.openLoops || data.open_loop || [];
-    setLoops(loopsList);
+    setLoops(loopsList.filter((loop) => !hiddenLoopIdsRef.current.has(loop.id)));
   }, []);
 
   const refreshData = useCallback(async () => {
     setLoadingData(true);
     setDataError(null);
     try {
-      await Promise.all([fetchDigest(), fetchLoops()]);
-      hasLoadedDigest.current = true;
+      await fetchLoops();
+      hasLoadedLoops.current = true;
     } catch (error) {
       console.error("Data fetch failed", error);
       setDataError("Having trouble loading your briefing. Please refresh.");
     } finally {
       setLoadingData(false);
     }
-  }, [fetchDigest, fetchLoops]);
+  }, [fetchLoops]);
 
   useEffect(() => {
     if (!hasOnboarded) return;
@@ -172,13 +171,13 @@ export function PedritoCard() {
 
   useEffect(() => {
     if (view !== "digest") return;
-    if (hasLoadedDigest.current) return;
+    if (hasLoadedLoops.current) return;
     refreshData();
   }, [view, refreshData]);
 
   useEffect(() => {
     if (view !== "digest") {
-      hasLoadedDigest.current = false;
+      hasLoadedLoops.current = false;
     }
   }, [view]);
 
@@ -193,6 +192,11 @@ export function PedritoCard() {
     setView("connect_whatsapp");
     void updateStatus(true);
   };
+
+  useEffect(() => {
+    const ids = Array.from(hiddenLoopIdsRef.current);
+    localStorage.setItem("pedrito-hidden-loops", JSON.stringify(ids));
+  }, [hiddenLoopIds]);
 
   const counts = useMemo(() => {
     const base = {
@@ -210,20 +214,50 @@ export function PedritoCard() {
     return base;
   }, [loops]);
 
+  const friendlySummary = useMemo(() => {
+    const total = loops.length;
+    const parts: string[] = [];
+    if (counts.promise) parts.push(`${counts.promise} promise${counts.promise === 1 ? "" : "s"}`);
+    if (counts.follow_up) parts.push(`${counts.follow_up} follow-up${counts.follow_up === 1 ? "" : "s"}`);
+    if (counts.question) parts.push(`${counts.question} question${counts.question === 1 ? "" : "s"}`);
+    if (counts.time_sensitive) {
+      parts.push(`${counts.time_sensitive} time-sensitive ${counts.time_sensitive === 1 ? "item" : "items"}`);
+    }
+
+    let carryOver = 0;
+    if (loops.length) {
+      const now = Date.now();
+      loops.forEach((loop) => {
+        if (!loop.createdAt) return;
+        const created = new Date(loop.createdAt).getTime();
+        if (!Number.isNaN(created) && now - created > 24 * 60 * 60 * 1000) {
+          carryOver += 1;
+        }
+      });
+    }
+
+    if (!parts.length) {
+      if (total > 0) {
+        return `Today, you have ${total === 1 ? "1 open loop" : `${total} open loops`}${carryOver ? " (carried over)" : ""}.`;
+      }
+      return "All clear — nothing waiting on you today.";
+    }
+
+    const joined = parts.join(", ").replace(/, ([^,]*)$/, parts.length > 1 ? ", and $1" : " and $1");
+    const core = `Today, you have ${joined}.`;
+    if (carryOver > 0) {
+      return `${core} ${carryOver === 1 ? "1 is" : `${carryOver} are`} carried over from earlier conversations.`;
+    }
+    return core;
+  }, [counts.follow_up, counts.promise, counts.question, counts.time_sensitive, loops]);
+
   const statusLabel = useMemo(() => {
-    if (view === "digest") return "Linked to WhatsApp";
+    if (view === "digest") return "WhatsApp linked";
     if (view === "connecting") return "Linking...";
     if (view === "connect_whatsapp") return "Waiting to link";
     if (view === "disconnected") return "Link lost";
     return "Just getting started";
   }, [view]);
-
-  const renderBadge = (
-    <div className="flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200">
-      <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
-      {statusLabel}
-    </div>
-  );
 
   const loadingIndicator = (
     <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -234,20 +268,19 @@ export function PedritoCard() {
 
   return (
     <div className="relative w-full">
-      <div className="mx-auto flex min-h-screen max-w-2xl items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-        <div className="w-full rounded-3xl border border-white/60 bg-white/70 shadow-2xl shadow-emerald-100/40 backdrop-blur-xl">
-          <div className="h-full w-full rounded-[26px] border border-white/70 bg-white/80 p-6 sm:p-8">
-            <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-800/70">
-                  Pedrito
-                </p>
-                <p className="text-sm text-slate-500">
-                  A tiny companion who keeps your promises and follow-ups in one calm place.
-                </p>
+      <div className="mx-auto flex max-w-2xl items-start justify-center px-4 py-6 sm:px-6 lg:px-8">
+        <div className={`${styles.cardShell} w-full`}>
+          <div className={`${styles.cardInner} h-full w-full p-6 sm:p-8`}>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex items-center gap-3 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                <span>{todayLabel}</span>
               </div>
-              {renderBadge}
+              <div className="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
+                {statusLabel}
+              </div>
             </div>
+            <h1 className={`${styles.cardTitle} mt-6`}>{friendlySummary}</h1>
 
             <div className="mt-6">
               {view === "onboarding" && (
@@ -328,66 +361,38 @@ export function PedritoCard() {
 
               {view === "digest" && (
                 <div className="space-y-6">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <h1 className="text-lg font-semibold text-slate-900">Today with Pedrito</h1>
-                      <p className="text-xs text-slate-500">Looking at the last 24 hours of your WhatsApp chats.</p>
-                    </div>
-                    <div className="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                      <span>{todayLabel}</span>
-                      <span>·</span>
-                      <span>{whatsappStatus === "connected" ? "WhatsApp linked" : "Not linked"}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-800 ring-1 ring-emerald-100">
-                      Today at a glance
-                    </span>
+                  <div className="flex flex-wrap items-center gap-2">
                     {loadingData && loadingIndicator}
                     {!loadingData && (
                       <button
-                        className="text-xs font-semibold text-emerald-700 underline-offset-4 hover:underline"
+                        className="flex items-center gap-2 text-xs font-semibold text-emerald-700 underline underline-offset-4"
                         onClick={refreshData}
                       >
-                        Refresh briefing
+                        Refresh
                       </button>
                     )}
-                    {!loadingData && (
-                      <p className="text-[11px] text-slate-500">
-                        Pulls the latest messages from WhatsApp and updates today’s counts.
-                      </p>
-                    )}
                   </div>
 
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold text-slate-800">What people have asked of you in the last 24 hours.</p>
-                    <div className="flex flex-wrap gap-2">
-                      <DigestChip label="Promises" value={counts.promise} />
-                      <DigestChip label="Follow-ups" value={counts.follow_up} />
-                      <DigestChip label="Questions" value={counts.question} />
-                      <DigestChip label="Time-sensitive" value={counts.time_sensitive} />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h2 className="text-lg font-semibold text-slate-900">Things waiting on you</h2>
-                    <p className="text-xs text-slate-500">
-                      These are the promises, questions and follow-ups Pedrito has parked for you. Mark anything as Done or Not important to clear it from your plate.
-                    </p>
-                  </div>
-
-                  <OpenLoopsList loops={loops} onChange={fetchLoops} />
+                  <OpenLoopsList
+                    loops={loops}
+                    onChange={({ id }) => {
+                      // Optimistically remove locally, then refresh from server while remembering dismissal
+                      setHiddenLoopIds((prev) => {
+                        const next = new Set(prev);
+                        next.add(id);
+                        hiddenLoopIdsRef.current = next;
+                        return next;
+                      });
+                      setLoops((prev) => prev.filter((loop) => loop.id !== id));
+                      void fetchLoops();
+                    }}
+                  />
 
                   {dataError && (
                     <p className="text-xs text-rose-500">
                       I couldn’t load your briefing just now. Hit ‘Refresh briefing’ to try again.
                     </p>
                   )}
-
-                  <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/60 px-4 py-3 text-xs text-emerald-800">
-                    On your phone, you can add Pedrito to your home screen for one-tap access.
-                  </div>
                 </div>
               )}
 
@@ -413,15 +418,6 @@ export function PedritoCard() {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function DigestChip({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
-      <span>{label}</span>
-      <span className="rounded-full bg-slate-900 px-2 py-1 text-white">{value}</span>
     </div>
   );
 }
