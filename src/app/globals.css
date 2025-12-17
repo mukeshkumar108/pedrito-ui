@@ -24,3 +24,11 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
 }
+
+a {
+  color: #f4acff;
+}
+
+a:hover {
+  color: #f7b8ff;
+}
