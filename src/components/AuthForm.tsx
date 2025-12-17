@@ -58,20 +58,19 @@ export function AuthForm() {
   };
 
   return (
-    <div className="w-full max-w-md space-y-6 rounded-md bg-white/90 p-6 ring-1 ring-slate-200/70 backdrop-blur">
+    <div className="w-full max-w-md space-y-6 rounded-md bg-white/10 p-6 ring-1 ring-slate-200/30 backdrop-blur">
       <div className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Pedrito</p>
-        <h1 className="text-3xl font-semibold text-slate-900">Sign in</h1>
-        <p className="text-sm text-slate-600">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white">Pedrito</p>
+        <p className="text-sm text-white/80">
           Enter your email and password. If you’re new, we’ll create your account and sign you in right away.
         </p>
       </div>
 
       <form className="space-y-5" onSubmit={handleSubmit}>
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-slate-700">Email</label>
+          <label className="text-xs font-semibold text-white">Email</label>
           <input
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200"
+            className="w-full rounded-md border border-white/40 bg-white/80 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#f4acff] focus:ring-2 focus:ring-[#f4acff]/40"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -81,9 +80,9 @@ export function AuthForm() {
           />
         </div>
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-slate-700">Password</label>
+          <label className="text-xs font-semibold text-white">Password</label>
           <input
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200"
+            className="w-full rounded-md border border-white/40 bg-white/80 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#f4acff] focus:ring-2 focus:ring-[#f4acff]/40"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -93,11 +92,11 @@ export function AuthForm() {
             placeholder="At least 6 characters"
           />
         </div>
-        {error && <p className="text-xs text-rose-500">{error}</p>}
+        {error && <p className="text-xs text-rose-100">{error}</p>}
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md bg-[#f4acff] px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-[#f7b8ff] disabled:opacity-60"
+          className="w-full rounded-md bg-[#f4acff] px-4 py-3 text-[1.3em] font-semibold text-white transition hover:bg-[#f7b8ff] disabled:opacity-60"
         >
           {loading ? "Signing in…" : "Sign in"}
         </button>
