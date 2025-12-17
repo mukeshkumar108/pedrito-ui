@@ -126,15 +126,36 @@ export function OnboardingWizard({ onConnected, onComplete }: OnboardingWizardPr
     switch (step) {
       case 0:
         return (
-          <div className="space-y-4">
-            <h1 className="text-2xl font-semibold text-slate-900">Meet Pedrito</h1>
-            <p className="text-sm text-slate-600">
-              A tiny second brain that keeps track of things people ask you for, so nothing slips
-              through the cracks.
-            </p>
-            <div className="flex justify-end">
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <h1 className="text-[2em] font-bold text-slate-700">Meet Pedrito</h1>
+              <p className="text-[2em] font-medium leading-snug text-slate-700 sm:text-[2em]">
+                Your quiet second brain for remembering the little things.
+              </p>
+              <p className="text-[1.1em] leading-[1.3] text-slate-700">
+                Ever finish a chat thinking “I’ll reply to that later” — and then forget?
+              </p>
+              <p className="text-[1.1em] leading-[1.3] text-slate-700">
+                Pedrito gently keeps track of things people ask you for, follow-ups you meant to send, and loose ends you didn’t want to drop.
+              </p>
+            </div>
+            <ul className="space-y-2 text-[1.1em] leading-[1.3] text-slate-700">
+              <li className="flex items-start gap-2">
+                <span className="mt-1 text-emerald-500">✓</span>
+                <span>Private and secure</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1 text-emerald-500">✓</span>
+                <span>No posting, no replies sent</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1 text-emerald-500">✓</span>
+                <span>You’re always in control</span>
+              </li>
+            </ul>
+            <div className="flex justify-start">
               <button
-                className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm"
+                className="rounded-md bg-slate-700 px-5 py-3 text-[1.1em] font-semibold text-white transition hover:bg-slate-600"
                 onClick={handleNext}
               >
                 Get started
@@ -145,8 +166,8 @@ export function OnboardingWizard({ onConnected, onComplete }: OnboardingWizardPr
       case 1:
         return (
           <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-slate-900">What should Pedrito focus on for you?</h2>
-            <p className="text-sm text-slate-600">Pick as many as you like. You can always change this later.</p>
+            <h2 className="text-3xl font-semibold text-slate-700">What should Pedrito focus on for you?</h2>
+            <p className="text-[1.1em] leading-[1.3] text-slate-700">Pick as many as you like. You can always change this later.</p>
             <div className="flex flex-wrap gap-2">
               {focusOptions.map((label) => {
                 const active = preferences.focusesOn.includes(label);
@@ -154,9 +175,9 @@ export function OnboardingWizard({ onConnected, onComplete }: OnboardingWizardPr
                   <button
                     key={label}
                     onClick={() => selectFocus(label)}
-                    className={`rounded-full border px-3 py-2 text-sm font-semibold transition ${
+                    className={`rounded-md border px-4 py-3 text-[1.1em] font-semibold transition ${
                       active
-                        ? "border-slate-900 bg-slate-900 text-white"
+                        ? "border-slate-700 bg-slate-700 text-white"
                         : "border-slate-300 bg-slate-50 text-slate-700 hover:border-slate-400"
                     }`}
                   >
@@ -167,13 +188,13 @@ export function OnboardingWizard({ onConnected, onComplete }: OnboardingWizardPr
             </div>
             <div className="flex justify-between">
               <button
-                className="text-sm font-semibold text-slate-600 underline-offset-4 hover:underline"
+                className="text-[1.1em] font-semibold text-slate-700 underline-offset-4 hover:underline"
                 onClick={handleBack}
               >
                 Back
               </button>
               <button
-                className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:bg-slate-400"
+                className="rounded-md bg-slate-700 px-5 py-3 text-[1.1em] font-semibold text-white shadow-sm transition hover:bg-slate-600 disabled:cursor-not-allowed disabled:bg-slate-400"
                 onClick={handleNext}
                 disabled={!canContinue}
               >
@@ -185,8 +206,8 @@ export function OnboardingWizard({ onConnected, onComplete }: OnboardingWizardPr
       case 2:
         return (
           <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-slate-900">How should Pedrito talk to you?</h2>
-            <p className="text-sm text-slate-600">We’ll keep the language gentle, but you can pick the vibe.</p>
+            <h2 className="text-3xl font-semibold text-slate-700">How should Pedrito talk to you?</h2>
+            <p className="text-[1.1em] leading-[1.3] text-slate-700">We’ll keep the language gentle, but you can pick the vibe.</p>
             <div className="flex flex-wrap gap-2">
               {toneOptions.map((tone) => {
                 const active = preferences.tone === tone;
@@ -195,9 +216,9 @@ export function OnboardingWizard({ onConnected, onComplete }: OnboardingWizardPr
                   <button
                     key={tone}
                     onClick={() => selectTone(tone)}
-                    className={`rounded-full border px-3 py-2 text-sm font-semibold transition ${
+                    className={`rounded-md border px-4 py-3 text-[1.1em] font-semibold transition ${
                       active
-                        ? "border-slate-900 bg-slate-900 text-white"
+                        ? "border-slate-700 bg-slate-700 text-white"
                         : "border-slate-300 bg-slate-50 text-slate-700 hover:border-slate-400"
                     }`}
                   >
@@ -208,13 +229,13 @@ export function OnboardingWizard({ onConnected, onComplete }: OnboardingWizardPr
             </div>
             <div className="flex justify-between">
               <button
-                className="text-sm font-semibold text-slate-600 underline-offset-4 hover:underline"
+                className="text-[1.1em] font-semibold text-slate-700 underline-offset-4 hover:underline"
                 onClick={handleBack}
               >
                 Back
               </button>
               <button
-                className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm"
+                className="rounded-md bg-slate-700 px-5 py-3 text-[1.1em] font-semibold text-white shadow-sm transition hover:bg-slate-600"
                 onClick={handleNext}
               >
                 Next
@@ -225,8 +246,8 @@ export function OnboardingWizard({ onConnected, onComplete }: OnboardingWizardPr
       case 3:
         return (
           <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-slate-900">How often should Pedrito check in?</h2>
-            <p className="text-sm text-slate-600">You’ll always be able to open him any time — nudges are optional.</p>
+            <h2 className="text-3xl font-semibold text-slate-700">How often should Pedrito check in?</h2>
+            <p className="text-[1.1em] leading-[1.3] text-slate-700">You’ll always be able to open him any time — nudges are optional.</p>
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               {cadenceOptions.map((cadence) => {
                 const active = preferences.cadence === cadence;
@@ -240,9 +261,9 @@ export function OnboardingWizard({ onConnected, onComplete }: OnboardingWizardPr
                   <button
                     key={cadence}
                     onClick={() => selectCadence(cadence)}
-                    className={`w-full rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition sm:w-auto ${
+                    className={`w-full rounded-md border px-4 py-3 text-left text-[1.1em] font-semibold transition sm:w-auto ${
                       active
-                        ? "border-slate-900 bg-slate-900 text-white"
+                        ? "border-slate-700 bg-slate-700 text-white"
                         : "border-slate-300 bg-slate-50 text-slate-700 hover:border-slate-400"
                     }`}
                   >
@@ -253,13 +274,13 @@ export function OnboardingWizard({ onConnected, onComplete }: OnboardingWizardPr
             </div>
             <div className="flex justify-between">
               <button
-                className="text-sm font-semibold text-slate-600 underline-offset-4 hover:underline"
+                className="text-[1.1em] font-semibold text-slate-700 underline-offset-4 hover:underline"
                 onClick={handleBack}
               >
                 Back
               </button>
               <button
-                className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm"
+                className="rounded-md bg-slate-700 px-5 py-3 text-[1.1em] font-semibold text-white shadow-sm transition hover:bg-slate-600"
                 onClick={handleNext}
               >
                 Next
@@ -269,25 +290,34 @@ export function OnboardingWizard({ onConnected, onComplete }: OnboardingWizardPr
         );
       default:
         return (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-slate-900">Last step: connect WhatsApp</h2>
-            <p className="text-sm text-slate-600">
-              To do his job, Pedrito needs a private link to your WhatsApp. He doesn’t send messages
-              or share your chats. He quietly looks for promises, follow-ups and time-sensitive
-              things and puts them on your list.
-            </p>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-              <OnboardingSection
-                onConnected={() => {
-                  if (!connected) {
-                    handleConnected();
-                  }
-                }}
-              />
+          <div className="space-y-5">
+            <div className="space-y-3 rounded-lg bg-white/80 p-4">
+              <h2 className="text-3xl font-semibold text-slate-700">Last step: connect WhatsApp</h2>
+              <div className="space-y-2 text-[1.1em] leading-[1.3] text-slate-700">
+                <p>To do his job, Pedrito needs a private link to your WhatsApp.</p>
+                <p>He doesn’t send messages. He doesn’t post on your behalf. He doesn’t share your chats.</p>
+                <p>He quietly looks for things like:</p>
+                <ul className="list-disc space-y-1 pl-5">
+                  <li>messages that need a reply</li>
+                  <li>promises you made</li>
+                  <li>follow-ups and time-sensitive asks</li>
+                </ul>
+                <p>…and turns them into a calm little list you can check when it suits you.</p>
+                <p className="font-semibold text-slate-800">
+                  Think of Pedrito like a second set of eyes — noticing the things you already care about, so you don’t have to hold them all in your head.
+                </p>
+              </div>
             </div>
+            <OnboardingSection
+              onConnected={() => {
+                if (!connected) {
+                  handleConnected();
+                }
+              }}
+            />
             <div className="flex justify-start">
               <button
-                className="text-sm font-semibold text-slate-600 underline-offset-4 hover:underline"
+                className="text-[1.1em] font-semibold text-slate-700 underline-offset-4 hover:underline"
                 onClick={handleBack}
               >
                 Back
@@ -299,8 +329,8 @@ export function OnboardingWizard({ onConnected, onComplete }: OnboardingWizardPr
   };
 
   return (
-    <div className="w-full max-w-2xl">
-      <div className="rounded-3xl border border-slate-200/60 bg-white p-6 shadow-lg sm:p-8">
+    <div className="w-full">
+      <div className="rounded-lg border border-slate-200/60 bg-white p-6 sm:p-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={step}

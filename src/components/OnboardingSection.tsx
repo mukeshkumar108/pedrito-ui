@@ -100,82 +100,57 @@ export function OnboardingSection({ onConnected }: OnboardingSectionProps) {
   }, [status]);
 
   return (
-    <section className="rounded-3xl border border-white/10 bg-gradient-to-b from-slate-900/70 via-slate-900/60 to-slate-950/70 p-6 shadow-xl ring-1 ring-white/5">
+    <section className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-sm uppercase tracking-[0.2em] text-blue-200/60">
-            Meet Pedrito
-          </p>
-          <h2 className="text-2xl font-semibold text-white">
-            Your tiny assistant for WhatsApp chaos
-          </h2>
-        </div>
-        <span
-          className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-blue-50 ring-1 ring-white/10"
-          aria-live="polite"
-        >
-          {statusLabel}
-        </span>
+        <h3 className="text-lg font-semibold text-slate-700">{statusLabel}</h3>
+        {status === "connected" && <span className="text-sm text-emerald-600">Linked</span>}
       </div>
 
-      <p className="mt-3 text-sm leading-relaxed text-slate-200/80">
-        Pedrito quietly watches what people ask of you and turns it into a calm
-        little list. Right now he’s focused on finding open loops in your recent
-        chats — promises, follow-ups, unanswered questions, and time-sensitive
-        stuff.
-      </p>
-
-      {status === "connected" && (
-        <div className="mt-6 flex items-center gap-3 rounded-2xl bg-emerald-500/10 px-4 py-3 text-emerald-100 ring-1 ring-emerald-400/30">
-          <span className="text-lg">✅</span>
-          <div>
-            <p className="text-sm font-semibold">You’re linked</p>
-            <p className="text-xs text-emerald-50/80">
-              Pedrito is now pulling your recent chats to spot open loops.
-            </p>
-          </div>
-        </div>
-      )}
-
       {status === "waiting_qr" && (
-        <div className="mt-6 rounded-2xl bg-white/5 p-4 ring-1 ring-white/10">
-          <p className="text-sm font-semibold text-white">
-            Scan this once on your phone
+        <div className="space-y-3 rounded-md bg-[#8ed462] p-4 text-white">
+          <p className="text-base font-semibold text-white">Scan this code once on your phone.</p>
+          <p className="text-base text-white/90">
+            The code refreshes every few seconds, so if it looks old, just wait a moment.
           </p>
-          <p className="text-xs text-slate-200/70">
-            Point your camera at the code. The code refreshes every little bit,
-            so if it looks old, just wait a few seconds.
-          </p>
-          <div className="mt-4 flex items-center justify-center rounded-xl bg-black/60 p-4 ring-1 ring-white/10">
+          <div className="flex items-center justify-center">
             <img
               src={`/api/whatsapp/qr?v=${qrVersion}`}
               alt="WhatsApp QR"
-              className="h-64 w-64 rounded-lg bg-white p-2 shadow-lg"
+              className="h-64 w-64 rounded-md object-contain"
             />
           </div>
+          <p className="text-sm text-slate-900">You can disconnect Pedrito at any time.</p>
+        </div>
+      )}
+
+      {status === "connected" && (
+        <div className="space-y-2 rounded-md bg-emerald-500/10 px-4 py-3 text-emerald-800 ring-1 ring-emerald-400/30">
+          <p className="text-[1.1em] font-semibold text-slate-700">You’re linked</p>
+          <p className="text-sm text-emerald-700">
+            Pedrito is now pulling your recent chats to spot open loops.
+          </p>
         </div>
       )}
 
       {status === "unknown" && (
-        <div className="mt-6 rounded-2xl bg-amber-500/10 px-4 py-3 text-amber-100 ring-1 ring-amber-400/30">
-          <p className="text-sm font-semibold">Can’t reach WhatsApp</p>
-          <p className="text-xs text-amber-50/80">
-            I’m having trouble reaching WhatsApp right now. The little box
-            running Pedrito might need a quick nudge.
+        <div className="space-y-1 rounded-md bg-amber-500/10 px-4 py-3 text-amber-800 ring-1 ring-amber-400/30">
+          <p className="text-[1.1em] font-semibold text-slate-700">Can’t reach WhatsApp</p>
+          <p className="text-sm text-amber-700">
+            I’m having trouble reaching WhatsApp right now. The little box running Pedrito might need a quick nudge.
           </p>
         </div>
       )}
 
       {message && (
-        <p className="mt-4 text-xs text-slate-200/70" role="status">
+        <p className="text-sm text-slate-700" role="status">
           {message}
         </p>
       )}
 
       {rawStatus && (
-        <details className="mt-4 text-xs text-slate-300/80">
-          <summary className="cursor-pointer text-slate-200">Debug: status payload</summary>
-          <pre className="mt-2 whitespace-pre-wrap break-all rounded-xl bg-white/10 p-3 text-[11px] text-slate-100">
+        <details className="text-xs text-slate-600">
+          <summary className="cursor-pointer text-slate-800">Debug: status payload</summary>
+          <pre className="mt-2 whitespace-pre-wrap break-all rounded-md bg-slate-800/80 p-3 text-[11px] text-white">
             {JSON.stringify(rawStatus, null, 2)}
           </pre>
         </details>
