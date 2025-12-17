@@ -61,7 +61,7 @@ export function AuthForm() {
     <div className="w-full max-w-md space-y-6 rounded-md bg-white/10 p-6 ring-1 ring-slate-200/30 backdrop-blur">
       <div className="space-y-3">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white">Pedrito</p>
-        <p className="text-sm text-white/80">
+        <p className="text-[1.25em] text-white/80">
           Enter your email and password. If you’re new, we’ll create your account and sign you in right away.
         </p>
       </div>
@@ -70,7 +70,7 @@ export function AuthForm() {
         <div className="space-y-2">
           <label className="text-xs font-semibold text-white">Email</label>
           <input
-            className="w-full rounded-md border border-white/40 bg-white/80 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#f4acff] focus:ring-2 focus:ring-[#f4acff]/40"
+            className="w-full rounded-md border border-white/40 bg-white/80 px-4 py-3 text-[1.25em] text-slate-900 outline-none transition focus:border-[#f4acff] focus:ring-2 focus:ring-[#f4acff]/40"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -82,7 +82,7 @@ export function AuthForm() {
         <div className="space-y-2">
           <label className="text-xs font-semibold text-white">Password</label>
           <input
-            className="w-full rounded-md border border-white/40 bg-white/80 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#f4acff] focus:ring-2 focus:ring-[#f4acff]/40"
+            className="w-full rounded-md border border-white/40 bg-white/80 px-4 py-3 text-[1.25em] text-slate-900 outline-none transition focus:border-[#f4acff] focus:ring-2 focus:ring-[#f4acff]/40"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -96,7 +96,7 @@ export function AuthForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md bg-[#f4acff] px-4 py-3 text-[1.3em] font-semibold text-white transition hover:bg-[#f7b8ff] disabled:opacity-60"
+          className="w-full rounded-md bg-[#f4acff] px-4 py-3 text-[1.25em] font-semibold text-white transition hover:bg-[#f7b8ff] disabled:opacity-60"
         >
           {loading ? "Signing in…" : "Sign in"}
         </button>
